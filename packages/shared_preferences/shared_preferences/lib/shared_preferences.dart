@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
@@ -188,5 +189,26 @@ class SharedPreferences {
     SharedPreferencesStorePlatform.instance =
         InMemorySharedPreferencesStore.withData(newValues);
     _completer = null;
+  }
+
+  /// Saves a T type [object] to persistent storage in the background.
+  void setObject<T>(String key, T object) {
+    final String jsonString = jsonEncode(object);
+    setString(key, jsonString);
+  }
+
+  /// Reads a value from persistent storage, throwing an exception if the value
+  /// type is not T.
+  T? getObject<T>(
+    String key,
+    T Function(Map<String, dynamic> json) fromJson,
+  ) {
+    final String? jsonString = getString(key);
+    if (jsonString != null || jsonString!.isNotEmpty) {
+      final Map<String, dynamic> map =
+          jsonDecode(jsonString) as Map<String, dynamic>;
+      return fromJson(map);
+    }
+    return null;
   }
 }
